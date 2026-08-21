@@ -121,7 +121,7 @@ bot.action("celebration", async (ctx) => {
       [Markup.button.callback("ሰርግ ለማሳወቅ", "wedding")],
       [Markup.button.callback("ወልድ", "welid")],
       [Markup.button.callback("ምርቃት ለማሳወቅ", "graduation")],
-      [Markup.button.callback("ወሰብአይ", "wesebai")],
+      [Markup.button.callback("ወሰባዪ", "wesebai")],
       [
         Markup.button.callback(
           "ሌሎች የደስታ መርሃ-ግብሮችን ለማሳወቅ",
@@ -157,10 +157,10 @@ bot.action("graduation", async (ctx) => {
 
 bot.action("wesebai", async (ctx) => {
   await ctx.answerCbQuery();
-  ctx.session.celebrationType = "ወሰብአይ";
+  ctx.session.celebrationType = "ወሰባዪ";
   ctx.session.step = "wesebai_name";
   await ctx.reply(
-    "እባክዎን ወሰብአይ ያለበትን የሰንበት ትምህርት ቤቱን አባል ሙሉ ስም ያስገቡ፦"
+    "እባክዎን ወሰባዪ ያለበትን የሰንበት ትምህርት ቤቱን አባል ሙሉ ስም ያስገቡ፦"
   );
 });
 
@@ -454,7 +454,7 @@ bot.on("text", async (ctx) => {
   if (step === "wesebai_name") {
     ctx.session.wesebaiName = text;
     ctx.session.step = "wesebai_address";
-    await ctx.reply("ወሰብአይ የሚካሄድበትን አድራሻ ያስቀምጡ፦");
+    await ctx.reply("ወሰባዪ የሚካሄድበትን አድራሻ ያስቀምጡ፦");
     return;
   }
 
@@ -462,7 +462,7 @@ bot.on("text", async (ctx) => {
     ctx.session.wesebaiAddress = text;
     ctx.session.step = "wesebai_phone";
     await ctx.reply(
-      "እባክዎን ወሰብአይ ያለበትን የሰንበት ትምህርት ቤቱን አባል ስልክ ቁጥር ያስገቡ፦"
+      "እባክዎን ወሰባዪ ያለበትን የሰንበት ትምህርት ቤቱን አባል ስልክ ቁጥር ያስገቡ፦"
     );
     return;
   }
@@ -471,7 +471,7 @@ bot.on("text", async (ctx) => {
     ctx.session.wesebaiPhone = text;
     await sendToAdmin(
       ctx,
-      "የደስታ መረጃ - ወሰብአይ",
+      "የደስታ መረጃ - ወሰባዪ",
       `የአባሉ ስም፦ ${ctx.session.wesebaiName}\n` +
         `አድራሻ፦ ${ctx.session.wesebaiAddress}\n` +
         `ስልክ ቁጥር፦ ${text}`
