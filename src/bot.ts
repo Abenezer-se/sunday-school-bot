@@ -22,6 +22,7 @@ interface SessionData {
   graduationName?: string;
   graduationInfo?: string;
   graduationDegree?: string;
+  graduationField?: string;
   graduationPhoto?: string;
   wesebaiName?: string;
   wesebaiAddress?: string;
@@ -57,18 +58,19 @@ const bot = new Telegraf<BotContext>(botToken);
 
 bot.use(session({ defaultSession: () => ({}) }));
 
+/* ================= STEP 1: START & MEMBER VERIFICATION ================= */
 bot.start(async (ctx) => {
   ctx.session = {
     step: "member_status",
   };
 
   await ctx.reply(
-    "እንኳን ወደ ደብረ ሰላም መድኃኔዓለም ካቴድራል የመሠረተ ሕይወት ሰንበት ትምህርት ቤት መረጃ መስጫ ቦት በደህና መጡ!\n\n" +
-      "የሰንበት ትምህርት ቤቱ አባል ነዎት?",
+    "🔔 እንኳን ወደ ደብረ ሰላም መድኃኔዓለም ካቴድራል የመሠረተ ሕይወት ሰንበት ትምህርት ቤት መረጃ መስጫ ቦት በደህና መጡ!\n\n" +
+      "👤 የሰንበት ትምህርት ቤቱ አባል ነዎት?",
     Markup.inlineKeyboard([
       [
-        Markup.button.callback("አዎ ነኝ", "member_yes"),
-        Markup.button.callback("አይ አይደለሁም", "member_no"),
+        Markup.button.callback("✅ አዎ ነኝ", "member_yes"),
+        Markup.button.callback("❌ አይ አይደለሁም", "member_no"),
       ],
     ])
   );
@@ -88,43 +90,51 @@ bot.action("member_no", async (ctx) => {
   await showInformationTypes(ctx);
 });
 
+/* ================= STEP 2: SERVICE SELECTION ================= */
 async function showInformationTypes(ctx: BotContext) {
   await ctx.reply(
-    "ምን ዓይነት መረጃ መስጠት ይፈልጋሉ?",
+    "📋 ምን ዓይነት መረጃ መስጠት ይፈልጋሉ?",
     Markup.inlineKeyboard([
-      [Markup.button.callback("የሐዘን / የእዘን", "mourning")],
-      [Markup.button.callback("የደስታ", "celebration")],
-      [Markup.button.callback("የስነ ምግባር ክፍተት ጥቆማ ለመስጠት", "ethics")],
-      [Markup.button.callback("ወቅታዊ", "current")],
-      [Markup.button.callback("ትምህርታዊ ጥያቄዎችን ለመጠየቅ", "education")],
-      [Markup.button.callback("ምክር ለመቀበል", "advice")],
+      [Markup.button.callback("🖤 የሐዘን / የእዘን", "mourning")],
+      [Markup.button.callback("🎉 የደስታ", "celebration")],
+      [
+        Markup.button.callback(
+          "⚠️ የስነ ምግባር ክፍተት ጥቆማ ለመስጠት",
+          "ethics"
+        ),
+      ],
+      [Markup.button.callback("📢 ወቅታዊ", "current")],
+      [Markup.button.callback("❓ ትምህርታዊ ጥያቄዎችን ለመጠየቅ", "education")],
+      [Markup.button.callback("🤝 ምክር ለመቀበል", "advice")],
     ])
   );
 }
 
-/* ================= 1. የሐዘን / የእዘን FLOW ================= */
+/* ================= STEP 3: DETAILED QUESTIONS FLOWS ================= */
+
+/* --- 1. የሐዘን / የእዘን FLOW --- */
 bot.action("mourning", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.session.informationType = "የሐዘን / የእዘን";
   ctx.session.step = "mourning_name";
-  await ctx.reply("ሀዘን የደረሰበት/የደረሰባት አባል ሙሉ ስም ያስገቡ፦");
+  await ctx.reply("👤 ሀዘን የደረሰበት/የደረሰባት አባል ሙሉ ስም ያስገቡ፦");
 });
 
-/* ================= 2. የደስታ FLOW ================= */
+/* --- 2. የደስታ FLOW --- */
 bot.action("celebration", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.session.informationType = "የደስታ";
   ctx.session.step = "celebration_type";
   await ctx.reply(
-    "እባክዎን የደስታ ዓይነት ይምረጡ፦",
+    "🎈 እባክዎን የደስታ ዓይነት ይምረጡ፦",
     Markup.inlineKeyboard([
-      [Markup.button.callback("ሰርግ ለማሳወቅ", "wedding")],
-      [Markup.button.callback("ወልድ", "welid")],
-      [Markup.button.callback("ምርቃት ለማሳወቅ", "graduation")],
-      [Markup.button.callback("ወሰባዪ", "wesebai")],
+      [Markup.button.callback("💍 ሰርግ ለማሳወቅ", "wedding")],
+      [Markup.button.callback("👶 ወሊድ", "welid")],
+      [Markup.button.callback("🎓 ምርቃት ለማሳወቅ", "graduation")],
+      [Markup.button.callback("🕊️ ወሰባዬ", "wesebai")],
       [
         Markup.button.callback(
-          "ሌሎች የደስታ መርሃ-ግብሮችን ለማሳወቅ",
+          "✨ ሌሎች የደስታ መርሃ-ግብሮችን ለማሳወቅ",
           "other_celebration"
         ),
       ],
@@ -132,83 +142,157 @@ bot.action("celebration", async (ctx) => {
   );
 });
 
+// 2.1. ሰርግ
 bot.action("wedding", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.session.celebrationType = "ሰርግ";
   ctx.session.step = "wedding_info";
   await ctx.reply(
-    "እባክዎን የሰርግ ያለበትን የሰንበት ትምህርት ቤቱን አባል ሙሉ ስም፣ ስልክ ቁጥር እና የመርሃ-ግብሩን ሰዓት እና ቦታ ይጻፉ።"
+    "📝 እባክዎን የሰርግ ያለበትን የሰንበት ትምህርት ቤቱን አባል ሙሉ ስም፣ ስልክ ቁጥር እና የመርሃ-ግብሩን ሰዓት እና ቦታ ይጻፉ።"
   );
 });
 
+// 2.2. ወሊድ
 bot.action("welid", async (ctx) => {
   await ctx.answerCbQuery();
-  ctx.session.celebrationType = "ወልድ";
+  ctx.session.celebrationType = "ወሊድ";
   ctx.session.step = "welid_spouse";
-  await ctx.reply("እባክዎትን የወለዱትን ባለትዳር የባል(የሚስት) ስም ያስገቡልን?");
+  await ctx.reply("👨‍👩‍👧 እባክዎትን የወለዱትን ባለትዳር የባል(የሚስት) ስም ያስገቡልን?");
 });
 
+// 2.3. ምርቃት
 bot.action("graduation", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.session.celebrationType = "ምርቃት";
   ctx.session.step = "grad_name";
-  await ctx.reply("እባክዎን የተመረቀውን/ቷን ሙሉ ስም ያስገቡ?");
+  await ctx.reply("👤 እባክዎን የተመረቀውን/ቷን ሙሉ ስም ያስገቡ?");
 });
 
-bot.action("wesebai", async (ctx) => {
+// Graduation Level Handler
+bot.action(/^grad_level_(.+)$/, async (ctx) => {
   await ctx.answerCbQuery();
-  ctx.session.celebrationType = "ወሰባዪ";
-  ctx.session.step = "wesebai_name";
+  const level = ctx.match[1];
+  ctx.session.graduationDegree = level;
+  ctx.session.step = "grad_field";
+
   await ctx.reply(
-    "እባክዎን ወሰባዪ ያለበትን የሰንበት ትምህርት ቤቱን አባል ሙሉ ስም ያስገቡ፦"
+    "📚 እባክዎን አባሉ የተመረቀበትን የትምህርት ዘርፍ ይምረጡ፦",
+    Markup.inlineKeyboard([
+      [
+        Markup.button.callback("💊 Pharmacy", "grad_field_Pharmacy"),
+        Markup.button.callback("🧪 Medical Lab", "grad_field_MedLab"),
+      ],
+      [
+        Markup.button.callback("🩺 Medicine", "grad_field_Medicine"),
+        Markup.button.callback("💉 Anesthesia", "grad_field_Anesthesia"),
+      ],
+      [
+        Markup.button.callback("👶 Midwifery", "grad_field_Midwifery"),
+        Markup.button.callback("🧑‍⚕️ Nursing", "grad_field_Nursing"),
+      ],
+      [
+        Markup.button.callback("🏗️ Engineering", "grad_field_Engineering"),
+        Markup.button.callback("💻 Software Eng", "grad_field_SE"),
+      ],
+      [
+        Markup.button.callback("🖥️ Computer Sci", "grad_field_CS"),
+        Markup.button.callback("🌐 IT", "grad_field_IT"),
+      ],
+      [
+        Markup.button.callback("💰 Accounting", "grad_field_Accounting"),
+        Markup.button.callback("📊 Management", "grad_field_Management"),
+      ],
+      [
+        Markup.button.callback("📈 Marketing", "grad_field_Marketing"),
+        Markup.button.callback("🏛️ Governance", "grad_field_Governance"),
+      ],
+      [
+        Markup.button.callback("⚖️ Law", "grad_field_Law"),
+        Markup.button.callback("✍️ ሌላ ካለ በጽሑፍ ይግለጹልን", "grad_field_Other"),
+      ],
+    ])
   );
 });
 
+// Graduation Field Handler
+bot.action(/^grad_field_(.+)$/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const fieldKey = ctx.match[1];
+
+  const fieldMap: Record<string, string> = {
+    Pharmacy: "Pharmacy",
+    MedLab: "Medical Laboratory",
+    Medicine: "Medicine",
+    Anesthesia: "Anesthesia",
+    Midwifery: "Midwifery",
+    Nursing: "Nursing",
+    Engineering: "Engineering Department",
+    SE: "Software Engineering",
+    CS: "Computer Science",
+    IT: "IT",
+    Accounting: "Accounting and Finance",
+    Management: "Management",
+    Marketing: "Marketing Management",
+    Governance: "Governance",
+    Law: "Law",
+  };
+
+  if (fieldKey === "Other") {
+    ctx.session.step = "grad_field_custom";
+    await ctx.reply("✍️ እባክዎን የተመረቁበትን የትምህርት ዘርፍ በጽሑፍ ይግለጹልን፦");
+  } else {
+    ctx.session.graduationField = fieldMap[fieldKey] || fieldKey;
+    ctx.session.step = "grad_photo";
+    await ctx.reply("🖼️ እባክዎን ፎቶ ካለ ይላኩልን (ከሌለ «የለም» ብለው ይጻፉ)፦");
+  }
+});
+
+// 2.4. ወሰባዬ
+bot.action("wesebai", async (ctx) => {
+  await ctx.answerCbQuery();
+  ctx.session.celebrationType = "ወሰባዬ";
+  ctx.session.step = "wesebai_name";
+  await ctx.reply("👤 እባክዎን ወሰባዬ ያለበትን የሰንበት ትምህርት ቤቱን አባል ሙሉ ስም ያስገቡ፦");
+});
+
+// 2.5. ሌሎች የደስታ መርሃ-ግብሮች
 bot.action("other_celebration", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.session.celebrationType = "ሌሎች የደስታ መርሃ-ግብር";
   ctx.session.step = "other_celebration_info";
   await ctx.reply(
-    "እባክዎን የፕሮግራሙን ዓይነት፣ የሰንበት ትምህርት ቤቱን አባል ሙሉ ስም፣ ስልክ ቁጥር እና የመርሃ-ግብሩን ሰዓት እና ቦታ ይጻፉ።"
+    "📝 እባክዎን የፕሮግራሙን ዓይነት፣ የሰንበት ትምህርት ቤቱን አባል ሙሉ ስም፣ ስልክ ቁጥር እና የመርሃ-ግብሩን ሰዓት እና ቦታ ይጻፉ።"
   );
 });
 
-// Graduation Level Selection
-bot.action(/^grad_level_(.+)$/, async (ctx) => {
-  await ctx.answerCbQuery();
-  const level = ctx.match[1];
-  ctx.session.graduationDegree = level;
-  ctx.session.step = "grad_photo";
-  await ctx.reply(
-    "እባክዎን ፎቶ ካለ ይላኩልን (ፎቶ ከሌለ «የለም» ብለው ይጻፉ)፦"
-  );
-});
-
-/* ================= 3. የስነ ምግባር ክፍተት ጥቆማ FLOW ================= */
+/* --- 3. የስነ ምግባር ክፍተት ጥቆማ FLOW --- */
 bot.action("ethics", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.session.informationType = "የስነ ምግባር ክፍተት ጥቆማ";
   ctx.session.step = "ethics_group";
   await ctx.reply(
-    "ጥቆማ መስጠት የሚፈልጉት በየትኛው ክፍል አባል ላይ ነው?",
+    "👥 ጥቆማ መስጠት የሚፈልጉት በየትኛው ክፍል አባል ላይ ነው?",
     Markup.inlineKeyboard([
-      [Markup.button.callback("የአዳጊ እና ወጣቶች አባላት ላይ", "ethics_g_1")],
-      [Markup.button.callback("የወጣቶች አባላት ላይ", "ethics_g_2")],
-      [Markup.button.callback("የመዘምራን አባላት ላይ", "ethics_g_3")],
+      [Markup.button.callback("👶 የአዳጊ እና ወጣቶች አባላት ላይ", "ethics_g_1")],
+      [Markup.button.callback("🧑 የወጣቶች አባላት ላይ", "ethics_g_2")],
+      [Markup.button.callback("🎶 የመዘምራን አባላት ላይ", "ethics_g_3")],
       [
         Markup.button.callback(
-          "የስራ አመራር እና አስፈጻሚ አባላት ላይ",
+          "💼 የስራ አመራር እና አስፈጻሚ አባላት ላይ",
           "ethics_g_4"
         ),
       ],
-      [Markup.button.callback("የነባር አባላት ላይ", "ethics_g_5")],
+      [Markup.button.callback("👴 የነባር አባላት ላይ", "ethics_g_5")],
     ])
   );
 });
 
 bot.action(/^ethics_g_\d$/, async (ctx) => {
   await ctx.answerCbQuery();
-  const buttonData = ctx.callbackQuery && "data" in ctx.callbackQuery ? ctx.callbackQuery.data : "";
+  const buttonData =
+    ctx.callbackQuery && "data" in ctx.callbackQuery
+      ? ctx.callbackQuery.data
+      : "";
   const groups: Record<string, string> = {
     ethics_g_1: "የአዳጊ እና ወጣቶች አባላት ላይ",
     ethics_g_2: "የወጣቶች አባላት ላይ",
@@ -220,68 +304,71 @@ bot.action(/^ethics_g_\d$/, async (ctx) => {
   ctx.session.step = "ethics_gap";
 
   await ctx.reply(
-    "በአባሉ/ሏ ላይ ያዩት ክፍተት ምንድነው?",
+    "🚨 በአባሉ/ሏ ላይ ያዩት ክፍተት ምንድነው?",
     Markup.inlineKeyboard([
       [
         Markup.button.callback(
-          "ማህበራዊ ድኅረ ገጽ ላይ አርአያነት የጎደለውን ምስሎች (ቪድዮዎች) ማጋራት",
+          "📱 ማህበራዊ ድኅረ ገጽ ላይ አርአያነት የጎደለውን ምስሎች (ቪድዮዎች) ማጋራት",
           "ethics_p_1"
         ),
       ],
-      [Markup.button.callback("ከአባላት ጋር በመጋጨት", "ethics_p_2")],
+      [Markup.button.callback("💥 ከአባላት ጋር በመጋጨት", "ethics_p_2")],
       [
         Markup.button.callback(
-          "ከቤ/ክን እንዲሁም ከማህበረሰቡ ውጭ የሆኑ ድርጊቶችን በማድረግ",
+          "🚫 ከቤ/ክን እንዲሁም ከማህበረሰቡ ውጭ የሆኑ ድርጊቶችን በማድረግ",
           "ethics_p_3"
         ),
       ],
       [
         Markup.button.callback(
-          "ተጨባጭነት የሌለው ወሬ በማውራት(ስም በማጥፋት)",
+          "🗣️ ተጨባጭነት የሌለው ወሬ በማውራት (ስም በማጥፋት)",
           "ethics_p_4"
         ),
       ],
-      [Markup.button.callback("ሌሎች ካሉ ይጥቀሱ", "ethics_p_5")],
+      [Markup.button.callback("📝 ሌሎች ካሉ ይጥቀሱ", "ethics_p_5")],
     ])
   );
 });
 
 bot.action(/^ethics_p_\d$/, async (ctx) => {
   await ctx.answerCbQuery();
-  const buttonData = ctx.callbackQuery && "data" in ctx.callbackQuery ? ctx.callbackQuery.data : "";
+  const buttonData =
+    ctx.callbackQuery && "data" in ctx.callbackQuery
+      ? ctx.callbackQuery.data
+      : "";
   const gaps: Record<string, string> = {
     ethics_p_1:
       "ማህበራዊ ድኅረ ገጽ ላይ አርአያነት የጎደለውን ምስሎች (ቪድዮዎች) ማጋራት",
     ethics_p_2: "ከአባላት ጋር በመጋጨት",
     ethics_p_3: "ከቤ/ክን እንዲሁም ከማህበረሰቡ ውጭ የሆኑ ድርጊቶችን በማድረግ",
-    ethics_p_4: "ተጨባጭነት የሌለው ወሬ በማውራት(ስም በማጥፋት)",
+    ethics_p_4: "ተጨባጭነት የሌለው ወሬ በማውራት (ስም በማጥፋት)",
     ethics_p_5: "ሌሎች",
   };
   ctx.session.ethicsGapType = gaps[buttonData] || "ያልተጠቀሰ";
   ctx.session.step = "ethics_member_name";
-  await ctx.reply("እባክዎትን የአባሉ (ክፍተት ያዩበትን) ሙሉ ስም ያስገቡልን?");
+  await ctx.reply("👤 እባክዎን የአባሉ (ክፍተት ያዩበትን) ሙሉ ስም ያስገቡልን?");
 });
 
-/* ================= 4. OTHER FLOWS ================= */
+/* --- 4. OTHER FLOWS --- */
 bot.action("current", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.session.informationType = "ወቅታዊ";
   ctx.session.step = "current_information";
-  await ctx.reply("እባክዎን ማሳወቅ የሚፈልጉትን ወቅታዊ መረጃ ያስገቡ።");
+  await ctx.reply("📝 እባክዎን ማሳወቅ የሚፈልጉትን ወቅታዊ መረጃ ያስገቡ።");
 });
 
 bot.action("education", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.session.informationType = "ትምህርታዊ ጥያቄ";
   ctx.session.step = "education_question";
-  await ctx.reply("እባክዎን ጥያቄዎን ያስገቡ።");
+  await ctx.reply("❓ እባክዎን ጥያቄዎን ያስገቡ።");
 });
 
 bot.action("advice", async (ctx) => {
   await ctx.answerCbQuery();
   ctx.session.informationType = "ምክር ለመቀበል";
   ctx.session.step = "advice_situation";
-  await ctx.reply("እባክዎን ያጋጠመዎትን ሁኔታ ያሳውቁ።");
+  await ctx.reply("📝 እባክዎን ያጋጠመዎትን ሁኔታ ያሳውቁ።");
 });
 
 /* ================= PHOTO HANDLING ================= */
@@ -293,7 +380,7 @@ bot.on("photo", async (ctx) => {
     ctx.session.welidPhoto = photoId;
     await sendToAdmin(
       ctx,
-      "የደስታ መረጃ - ወልድ",
+      "የደስታ መረጃ - ወሊድ",
       `የባል/የሚስት ስም፦ ${ctx.session.welidSpouseName}\n` +
         `የልጅ ጾታ/መረጃ፦ ${ctx.session.welidChildGender}\n` +
         `ፎቶ፦ [ፎቶ ተያይዟል]`
@@ -311,6 +398,7 @@ bot.on("photo", async (ctx) => {
       `የተመረቀው አባል፦ ${ctx.session.graduationName}\n` +
         `የተመረቀበት ጊዜ እና ዩኒቨርሲቲ፦ ${ctx.session.graduationInfo}\n` +
         `የትምህርት ደረጃ፦ ${ctx.session.graduationDegree}\n` +
+        `የትምህርት ዘርፍ፦ ${ctx.session.graduationField}\n` +
         `ፎቶ፦ [ፎቶ ተያይዟል]`
     );
     await ctx.telegram.sendPhoto(adminChatId as string, photoId);
@@ -328,21 +416,21 @@ bot.on("text", async (ctx) => {
   if (step === "mourning_name") {
     ctx.session.mourningName = text;
     ctx.session.step = "mourning_relation";
-    await ctx.reply("በሟች እና በአባሉ/ሏ በኩል ያለው ዝምድና እባክዎ ይጥቀሱልን?");
+    await ctx.reply("🔗 በሟች እና በአባሉ/ሏ በኩል ያለው ዝምድና እባክዎ ይጥቀሱልን?");
     return;
   }
 
   if (step === "mourning_relation") {
     ctx.session.mourningRelation = text;
     ctx.session.step = "mourning_burial";
-    await ctx.reply("ቀበር ተፈጽሟል? ካልተፈጸመ የት? እና ሰዓቱ?");
+    await ctx.reply("⚰️ ቀበር ተፈጽሟል? ካልተፈጸመ የት? እና ሰዓቱ?");
     return;
   }
 
   if (step === "mourning_burial") {
     ctx.session.mourningBurial = text;
     ctx.session.step = "mourning_address";
-    await ctx.reply("አባሉ/ሏ ሀዘን የተቀመጠበት አድራሻ ይጥቀሱልን?");
+    await ctx.reply("🏠 አባሉ/ሏ ሀዘን የተቀመጠበት አድራሻ ይጥቀሱልን?");
     return;
   }
 
@@ -365,7 +453,7 @@ bot.on("text", async (ctx) => {
     ctx.session.celebrationInformation = text;
     ctx.session.step = "wedding_additional";
     await ctx.reply(
-      "ማሳወቅ የሚፈልጉትን ተጨማሪ መረጃ ያስገቡ (ከሌለ «የለም» ይበሉ)፦"
+      "➕ ማሳወቅ የሚፈልጉትን ተጨማሪ መረጃ ያስገቡ (ከሌለ «የለም» ይበሉ)፦"
     );
     return;
   }
@@ -385,23 +473,21 @@ bot.on("text", async (ctx) => {
   if (step === "welid_spouse") {
     ctx.session.welidSpouseName = text;
     ctx.session.step = "welid_child_info";
-    await ctx.reply("የወለዱት ልጅ ጾታ ይጥቀሱልን?");
+    await ctx.reply("📸 የወለዱት ልጅ ጾታ ከተቻለ ፎቶውን ቢያይዙልን (ፎቶ ከሌለ «የለም» ብለው ይጻፉ)፦");
     return;
   }
 
   if (step === "welid_child_info") {
     ctx.session.welidChildGender = text;
     ctx.session.step = "welid_photo";
-    await ctx.reply(
-      "እባክዎን ፎቶ ካለ ይላኩልን (ፎቶ ከሌለ «የለም» ብለው ይጻፉ)፦"
-    );
+    await ctx.reply("🖼️ እባክዎን ፎቶ ካለ ይላኩልን (ከሌለ «የለም» ብለው ይጻፉ)፦");
     return;
   }
 
   if (step === "welid_photo") {
     await sendToAdmin(
       ctx,
-      "የደስታ መረጃ - ወልድ",
+      "የደስታ መረጃ - ወሊድ",
       `የባል/የሚስት ስም፦ ${ctx.session.welidSpouseName}\n` +
         `የልጅ ጾታ/መረጃ፦ ${ctx.session.welidChildGender}\n` +
         `ፎቶ፦ ${text}`
@@ -414,7 +500,7 @@ bot.on("text", async (ctx) => {
   if (step === "grad_name") {
     ctx.session.graduationName = text;
     ctx.session.step = "grad_info";
-    await ctx.reply("መቼ ተመረቀ? የት ዩኒቨርሲቲ?");
+    await ctx.reply("🏛️ መቼ ተመረቀ? የት ዩኒቨርሲቲ?");
     return;
   }
 
@@ -422,18 +508,25 @@ bot.on("text", async (ctx) => {
     ctx.session.graduationInfo = text;
     ctx.session.step = "grad_degree";
     await ctx.reply(
-      "በምን ተመረቀ/ች?",
+      "📜 በምን ተመረቀ/ች?",
       Markup.inlineKeyboard([
         [
-          Markup.button.callback("ዲፕሎማ", "grad_level_ዲፕሎማ"),
-          Markup.button.callback("ዲግሪ", "grad_level_ዲግሪ"),
+          Markup.button.callback("🎓 ዲፕሎማ (Diploma)", "grad_level_ዲፕሎማ"),
+          Markup.button.callback("🎓 ዲግሪ (Degree)", "grad_level_ዲግሪ"),
         ],
         [
-          Markup.button.callback("ማስተርስ", "grad_level_ማስተርስ"),
-          Markup.button.callback("ፒኤችዲ", "grad_level_ፒኤችዲ"),
+          Markup.button.callback("🎓 ማስተርስ (Masters)", "grad_level_ማስተርስ"),
+          Markup.button.callback("🎓 ፒኤችዲ (PhD)", "grad_level_ፒኤችዲ"),
         ],
       ])
     );
+    return;
+  }
+
+  if (step === "grad_field_custom") {
+    ctx.session.graduationField = text;
+    ctx.session.step = "grad_photo";
+    await ctx.reply("🖼️ እባክዎን ፎቶ ካለ ይላኩልን (ከሌለ «የለም» ብለው ይጻፉ)፦");
     return;
   }
 
@@ -444,6 +537,7 @@ bot.on("text", async (ctx) => {
       `የተመረቀው አባል፦ ${ctx.session.graduationName}\n` +
         `የተመረቀበት ጊዜ እና ዩኒቨርሲቲ፦ ${ctx.session.graduationInfo}\n` +
         `የትምህርት ደረጃ፦ ${ctx.session.graduationDegree}\n` +
+        `የትምህርት ዘርፍ፦ ${ctx.session.graduationField}\n` +
         `ፎቶ፦ ${text}`
     );
     await finish(ctx);
@@ -454,7 +548,7 @@ bot.on("text", async (ctx) => {
   if (step === "wesebai_name") {
     ctx.session.wesebaiName = text;
     ctx.session.step = "wesebai_address";
-    await ctx.reply("ወሰባዪ የሚካሄድበትን አድራሻ ያስቀምጡ፦");
+    await ctx.reply("📍 ወሰባዬ የሚካሄድበትን አድራሻ ያስቀምጡ፦");
     return;
   }
 
@@ -462,7 +556,7 @@ bot.on("text", async (ctx) => {
     ctx.session.wesebaiAddress = text;
     ctx.session.step = "wesebai_phone";
     await ctx.reply(
-      "እባክዎን ወሰባዪ ያለበትን የሰንበት ትምህርት ቤቱን አባል ስልክ ቁጥር ያስገቡ፦"
+      "📞 እባክዎን ወሰባዬ ያለበትን የሰንበት ትምህርት ቤቱን አባል ስልክ ቁጥር ያስገቡ፦"
     );
     return;
   }
@@ -471,7 +565,7 @@ bot.on("text", async (ctx) => {
     ctx.session.wesebaiPhone = text;
     await sendToAdmin(
       ctx,
-      "የደስታ መረጃ - ወሰባዪ",
+      "የደስታ መረጃ - ወሰባዬ",
       `የአባሉ ስም፦ ${ctx.session.wesebaiName}\n` +
         `አድራሻ፦ ${ctx.session.wesebaiAddress}\n` +
         `ስልክ ቁጥር፦ ${text}`
@@ -517,9 +611,7 @@ bot.on("text", async (ctx) => {
   if (step === "education_question") {
     ctx.session.question = text;
     await sendToAdmin(ctx, "ትምህርታዊ ጥያቄ", text);
-    await ctx.reply(
-      "ጥያቄዎን ስለላኩልን እናመሰግናለን!\n\nምላሹን በጥቂት ቀናት ውስጥ እናሳውቆታለን።"
-    );
+    await ctx.reply("⏳ ምላሹን በጥቂት ቀናት ውስጥ እናሳውቆታለን።");
     ctx.session = {};
     return;
   }
@@ -528,7 +620,7 @@ bot.on("text", async (ctx) => {
   if (step === "advice_situation") {
     ctx.session.situation = text;
     ctx.session.step = "advice_phone";
-    await ctx.reply("እባክዎን ስልክ ቁጥርዎን ያስገቡ፦");
+    await ctx.reply("📞 እባክዎን ስልክ ቁጥርዎን ያስገቡ፦");
     return;
   }
 
@@ -540,7 +632,7 @@ bot.on("text", async (ctx) => {
       `ያጋጠመው ሁኔታ፦ ${ctx.session.situation}\n` + `ስልክ ቁጥር፦ ${text}`
     );
     await ctx.reply(
-      "በጥቂት ቀናት ውስጥ ለምክር አባው ወይም ከሰንበት ትምህርት ቤቱ የሰው ሀብት ክፍል ሥነ-ምግባር ዘርፍ ጋር እናገናኝዎታለን።"
+      "🕊️ በጥቂት ቀናት ውስጥ ለምክር አባው ወይም ከሰንበት ትምህርት ቤቱ የሰው ሀብት ክፍል ሥነ-ምግባር ዘርፍ ጋር እናገናኝዎታለን።"
     );
     ctx.session = {};
     return;
@@ -551,6 +643,7 @@ bot.on("text", async (ctx) => {
   }
 });
 
+/* ================= HELPER FUNCTIONS ================= */
 async function sendToAdmin(ctx: BotContext, title: string, details: string) {
   const username = ctx.from?.username ? `@${ctx.from.username}` : "የለም";
   const firstName = ctx.from?.first_name || "የለም";
@@ -576,14 +669,13 @@ async function sendToAdmin(ctx: BotContext, title: string, details: string) {
 }
 
 async function finish(ctx: BotContext) {
-  const contactText =
-    "\nለበለጠ መረጃ በ 0992294313 ወይም በ 0975044787 ይደውሉ።";
+  const contactText = "\nለበለጠ መረጃ በ 0991294313 ይደውሉ።";
 
   if (ctx.session.memberStatus === "አዎ ነኝ") {
-    await ctx.reply(`መረጃውን ስላሳወቁን እናመሰግናለን!${contactText}`);
+    await ctx.reply(`🙏 መረጃውን ስላሳወቁን እናመሰግናለን!${contactText}`);
   } else {
     await ctx.reply(
-      `እንደ ሰንበት ትምህርት ቤቱ አባል ባይሆኑም መረጃውን ስላሰጡን እናመሰግናለን!${contactText}`
+      `🙏 እንደ ሰንበት ትምህርት ቤቱ አባል ባይሆኑም መረጃውን ስላሰጡን እናመሰግናለን!${contactText}`
     );
   }
   ctx.session = {};
@@ -593,6 +685,7 @@ bot.catch((error) => {
   console.error("Bot error:", error);
 });
 
+/* ================= EXPRESS WEBHOOK SERVER ================= */
 const app = express();
 const port = Number(process.env.PORT) || 3000;
 const domain = process.env.RENDER_EXTERNAL_URL;
