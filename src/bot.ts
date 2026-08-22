@@ -675,7 +675,7 @@ async function finish(ctx: BotContext) {
     await ctx.reply(`🙏 መረጃውን ስላሳወቁን እናመሰግናለን!${contactText}`);
   } else {
     await ctx.reply(
-      `🙏 እንደ ሰንበት ትምህርት ቤቱ አባል ባይሆኑም መረጃውን ስላሰጡን እናመሰግናለን!${contactText}`
+      `🙏 መረጃውን ስላሰጡን እናመሰግናለን!${contactText}`
     );
   }
   ctx.session = {};
