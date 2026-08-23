@@ -37,6 +37,7 @@ interface SessionData {
   question?: string;
   situation?: string;
   advicePhone?: string;
+  feedbackText?: string;
 }
 
 interface BotContext extends Context {
@@ -106,6 +107,12 @@ async function showInformationTypes(ctx: BotContext) {
       [Markup.button.callback("📢 ወቅታዊ", "current")],
       [Markup.button.callback("❓ ትምህርታዊ ጥያቄዎችን ለመጠየቅ", "education")],
       [Markup.button.callback("🤝 ምክር ለመቀበል", "advice")],
+      [
+        Markup.button.callback(
+          "💡 ስለ ሰ/ት/ቤታችን ስለ አገልግሎት ሃሳብ ለመስጠት",
+          "feedback"
+        ),
+      ],
     ])
   );
 }
@@ -371,6 +378,14 @@ bot.action("advice", async (ctx) => {
   await ctx.reply("📝 እባክዎን ያጋጠመዎትን ሁኔታ ያሳውቁ።");
 });
 
+/* --- 5. FEEDBACK / asteyayet FLOW --- */
+bot.action("feedback", async (ctx) => {
+  await ctx.answerCbQuery();
+  ctx.session.informationType = "የአገልግሎት ሃሳብ / አስተያየት";
+  ctx.session.step = "feedback_text";
+  await ctx.reply("💡 እባክዎን ስለ ሰንበት ትምህርት ቤታችን ያላችሁን ሃሳብ እና አስተያየት ያስቀምጡልን፦");
+});
+
 /* ================= PHOTO HANDLING ================= */
 bot.on("photo", async (ctx) => {
   const step = ctx.session.step;
@@ -579,7 +594,7 @@ bot.on("text", async (ctx) => {
     await sendToAdmin(
       ctx,
       "የደስታ መረጃ - ሌሎች",
-      `የፕሮግራሙ መረጃ፦ ${text}`
+      `የመርሃግብሩ መረጃ፦ ${text}`
     );
     await finish(ctx);
     return;
@@ -632,7 +647,18 @@ bot.on("text", async (ctx) => {
       `ያጋጠመው ሁኔታ፦ ${ctx.session.situation}\n` + `ስልክ ቁጥር፦ ${text}`
     );
     await ctx.reply(
-      "🕊️ በጥቂት ቀናት ውስጥ ለምክር አባው ወይም ከሰንበት ትምህርት ቤቱ የሰው ሀብት ክፍል ሥነ-ምግባር ዘርፍ ጋር እናገናኝዎታለን።"
+      "🕊️ በጥቂት ቀናት ውስጥ ለምክር አሃው ወይም ከሰንበት ትምህርት ቤቱ የሰው ሀብት ክፍል ሥነ-ምግባር ዘርፍ ጋር እናገናኝዎታለን።"
+    );
+    ctx.session = {};
+    return;
+  }
+
+  // Feedback Steps
+  if (step === "feedback_text") {
+    ctx.session.feedbackText = text;
+    await sendToAdmin(ctx, "የአገልግሎት ሃሳብ / አስተያየት", text);
+    await ctx.reply(
+      "🙏 ሃሳብ እና አስተያየቶን ስለሰጡን እናመሰግናለን!\nለበለጠ መረጃ በ 0991294313 ይደውሉ።"
     );
     ctx.session = {};
     return;
@@ -674,9 +700,7 @@ async function finish(ctx: BotContext) {
   if (ctx.session.memberStatus === "አዎ ነኝ") {
     await ctx.reply(`🙏 መረጃውን ስላሳወቁን እናመሰግናለን!${contactText}`);
   } else {
-    await ctx.reply(
-      `🙏 መረጃውን ስላሰጡን እናመሰግናለን!${contactText}`
-    );
+    await ctx.reply(`🙏 መረጃውን ስለሰጡን እናመሰግናለን!${contactText}`);
   }
   ctx.session = {};
 }
